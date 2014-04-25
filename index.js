@@ -36,11 +36,10 @@ module.exports = function (compressOptions) {
     // types of bodies
     var body = options.body
     var filename = options.filename
-
     // check whether to compress the stream
     var length = yield* contentLength()
     var compress = (body || filename)
-      && (typeof length === 'number' && length > threshold)
+      && (typeof length !== 'number' || length > threshold)
       && filter(headers['content-type'])
     if (compress)
       headers['content-encoding'] = 'gzip'
@@ -84,7 +83,7 @@ module.exports = function (compressOptions) {
       socket.on('close', destroy)
 
       function destroy(err) {
-        onerror(err)
+        if (err) onerror(err)
         dethroy(body)
 
         stream.removeListener('close', destroy)
@@ -106,7 +105,7 @@ module.exports = function (compressOptions) {
     }
 
     function cleanup(err) {
-      onerror(err)
+      if (err) onerror(err)
 
       stream.removeListener('acknowledge', acknowledge)
       stream.removeListener('close', cleanup)

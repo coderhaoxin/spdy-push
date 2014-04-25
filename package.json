@@ -17,10 +17,13 @@
     "co": "3"
   },
   "devDependencies": {
+    "co": "3",
     "koa": "*",
     "mocha": "*",
     "should": "*",
-    "supertest": "*"
+    "supertest": "*",
+    "spdy": "1",
+    "spdy-keys": "*"
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --require should --harmony-generators --reporter spec --bail"
