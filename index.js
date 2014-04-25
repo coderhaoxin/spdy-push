@@ -39,7 +39,7 @@ module.exports = function (compressOptions) {
 
     // check whether to compress the stream
     var length = yield* contentLength()
-    var compress = body
+    var compress = (body || filename)
       && (typeof length === 'number' && length > threshold)
       && filter(headers['content-type'])
     if (compress)
