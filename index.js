@@ -37,16 +37,15 @@ module.exports = function (compressOptions) {
     var body = options.body
     var filename = options.filename
 
-    // get the length of the body if possible
-    var length = yield* contentLength()
-    if (typeof length === 'number') headers['content-length'] = String(length)
-    else length = Infinity // undefined means it's a stream, and always compress streams
-
     // check whether to compress the stream
+    var length = yield* contentLength()
     var compress = body
-      && length > threshold
+      && (typeof length === 'number' && length > threshold)
       && filter(headers['content-type'])
-    if (compress) headers['content-encoding'] = 'gzip'
+    if (compress)
+      headers['content-encoding'] = 'gzip'
+    else if (typeof length === 'number')
+      headers['content-length'] = String(length)
 
     var stream = res.push(path, headers, priority)
     stream.on('acknowledge', acknowledge)

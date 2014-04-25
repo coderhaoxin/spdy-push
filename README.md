@@ -35,3 +35,9 @@ Options:
 - `filename` - a filename of a body. Use this to push bodies without creating a stream first (otherwise you'll create file descriptor leaks)
 
 Either `body` or `filename` is required.
+
+Don't set the following headers.
+These headers will be automatically set:
+
+- `content-encoding`
+- `content-length`
