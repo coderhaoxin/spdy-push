@@ -55,7 +55,7 @@ module.exports = function (compressOptions) {
     function acknowledge() {
       cleanup()
 
-      if (!body) return stream.end()
+      if (!body && !filename) return stream.end()
 
       if (typeof body === 'string' || Buffer.isBuffer(body)) {
         if (!compress) return stream.end(body)
@@ -96,7 +96,9 @@ module.exports = function (compressOptions) {
       if (filename) {
         // already set
         if (headers['content-length']) return parseInt(headers['content-length'], 0)
-        return (yield stat(filename)).size
+        // causing spdy issues because it occurs on next tick
+        // return (yield stat(filename)).size
+        return false
       }
 
       if (!body) return 0
