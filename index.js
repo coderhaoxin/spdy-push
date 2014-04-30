@@ -83,7 +83,7 @@ module.exports = function (compressOptions) {
       socket.on('close', destroy)
 
       function destroy(err) {
-        if (err) onerror(err)
+        if (err) onerror(filterError(err))
         dethroy(body)
 
         stream.removeListener('close', destroy)
@@ -107,7 +107,7 @@ module.exports = function (compressOptions) {
     }
 
     function cleanup(err) {
-      if (err) onerror(err)
+      if (err) onerror(filterError(err))
 
       stream.removeListener('acknowledge', acknowledge)
       stream.removeListener('close', cleanup)
@@ -116,8 +116,16 @@ module.exports = function (compressOptions) {
   }
 }
 
-function stat(filename) {
-  return function (done) {
-    fs.stat(filename, done)
-  }
+// function stat(filename) {
+//   return function (done) {
+//     fs.stat(filename, done)
+//   }
+// }
+
+function filterError(err) {
+  if (err == null) return
+  if (!(err instanceof Error)) return
+  if (err.code === 'RST_STREAM') return
+  if (err.message === 'Write after end!') return
+  return err
 }
