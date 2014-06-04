@@ -40,6 +40,7 @@ module.exports = function (compressOptions) {
     var length = yield* contentLength()
     var compress = (body || filename)
       && (typeof length !== 'number' || length > threshold)
+      && !headers['content-encoding']
       && filter(headers['content-type'])
     if (compress)
       headers['content-encoding'] = 'gzip'

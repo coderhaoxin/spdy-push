@@ -5,6 +5,8 @@ var https = require('https')
 var spdy = require('spdy')
 var keys = require('spdy-keys')
 var join = require('path').join
+var zlib = require('mz/zlib')
+var get = require('raw-body')
 var koa = require('koa')
 var fs = require('fs')
 var co = require('co')
@@ -158,7 +160,31 @@ describe('Strings', function () {
 })
 
 describe('Buffers', function () {
+  describe('when already compress', function () {
+    it('should not compress', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
 
+        push({
+          threshold: 1
+        })(this, {
+          path: '/',
+          headers: {
+            'content-encoding': 'gzip',
+            'content-type': 'text/plain'
+          },
+          body: yield zlib.gzip('lol')
+        })
+      }))
+
+      var res = yield pull
+      res.should.have.header('Content-Encoding', 'gzip')
+      res.should.have.header('Content-Type', 'text/plain')
+
+      var buffer = yield get(res)
+      buffer.toString('utf8').should.equal('lol')
+    }))
+  })
 })
 
 function listen(app) {
@@ -192,7 +218,7 @@ function pull(done) {
   })
   .once('error', done)
   .once('response', function (res) {
-    if (res.statusCode !== 204) done(new Error('wtf'))
+    if (res.statusCode !== 204) done(new Error('got status code: ' + res.statusCode))
   })
   .end()
 }

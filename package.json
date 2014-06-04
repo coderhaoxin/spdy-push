@@ -18,9 +18,11 @@
   },
   "devDependencies": {
     "co": "3",
+    "mz": "*",
     "koa": "*",
+    "raw-body": "*",
     "mocha": "*",
-    "should": "*",
+    "should": "3",
     "supertest": "*",
     "spdy": "1",
     "spdy-keys": "*"
