@@ -13,8 +13,7 @@
   "dependencies": {
     "compressible": "1",
     "dethroy": "1",
-    "bytes": "0",
-    "co": "3"
+    "bytes": "1"
   },
   "devDependencies": {
     "co": "3",

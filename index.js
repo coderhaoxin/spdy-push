@@ -4,7 +4,6 @@ var dethroy = require('dethroy')
 var bytes = require('bytes')
 var zlib = require('zlib')
 var fs = require('fs')
-var co = require('co')
 
 module.exports = function (compressOptions) {
   compressOptions = compressOptions || {}
@@ -13,13 +12,7 @@ module.exports = function (compressOptions) {
   var threshold = compressOptions.threshold || 1024
   if (typeof threshold === 'string') threshold = bytes(threshold)
 
-  var _push = co(push)
-
-  return function (context, options) {
-    _push(context, options, context.onerror)
-  }
-
-  function* push(context, options) {
+  return function push(context, options) {
     // koa properties
     var res = context.res
     var socket = context.socket
@@ -37,7 +30,7 @@ module.exports = function (compressOptions) {
     var body = options.body
     var filename = options.filename
     // check whether to compress the stream
-    var length = yield* contentLength()
+    var length = contentLength()
     var compress = (body || filename)
       && (typeof length !== 'number' || length > threshold)
       && !headers['content-encoding']
@@ -93,13 +86,11 @@ module.exports = function (compressOptions) {
       }
     }
 
-    function* contentLength() {
+    function contentLength() {
       if (filename) {
         // already set
-        if (headers['content-length']) return parseInt(headers['content-length'], 0)
-        // causing spdy issues because it occurs on next tick
-        // return (yield stat(filename)).size
-        return false
+        if (!headers['content-length']) return false
+        return parseInt(headers['content-length'], 10)
       }
 
       if (!body) return 0
@@ -116,12 +107,6 @@ module.exports = function (compressOptions) {
     }
   }
 }
-
-// function stat(filename) {
-//   return function (done) {
-//     fs.stat(filename, done)
-//   }
-// }
 
 function filterError(err) {
   if (err == null) return
