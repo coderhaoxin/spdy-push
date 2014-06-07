@@ -120,10 +120,6 @@ describe('Files with Content-Length', function () {
   })
 })
 
-describe('Files without Content-Length', function () {
-  // stupid `res.socket = null` is being set on next tick
-})
-
 describe('RST_STREAM', function () {
   it('should not leak file descriptors', co(function* () {
     var called = false
@@ -185,6 +181,34 @@ describe('Buffers', function () {
       buffer.toString('utf8').should.equal('lol')
     }))
   })
+})
+
+describe('yield push', function () {
+  it('should wait until the stream is finished writing', co(function* () {
+    yield listen(koa().use(function* () {
+      this.status = 204
+
+      var stream = yield push({
+        threshold: 1
+      })(this, {
+        path: '/',
+        headers: {
+          'content-encoding': 'gzip',
+          'content-type': 'text/plain'
+        },
+        body: yield zlib.gzip('lol')
+      })
+
+      stream.writable.should.be.false
+    }))
+
+    var res = yield pull
+    res.should.have.header('Content-Encoding', 'gzip')
+    res.should.have.header('Content-Type', 'text/plain')
+
+    var buffer = yield get(res)
+    buffer.toString('utf8').should.equal('lol')
+  }))
 })
 
 function listen(app) {

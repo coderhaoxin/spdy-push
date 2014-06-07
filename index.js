@@ -12,7 +12,9 @@ module.exports = function (compressOptions) {
   var threshold = compressOptions.threshold || 1024
   if (typeof threshold === 'string') threshold = bytes(threshold)
 
-  return function push(context, options) {
+  return function push(context, options, done) {
+    done = done || noop
+
     // koa properties
     var res = context.res
     var socket = context.socket
@@ -40,11 +42,22 @@ module.exports = function (compressOptions) {
     else if (typeof length === 'number')
       headers['content-length'] = String(length)
 
+    // regular push stream handling
     var stream = res.push(path, headers, priority)
     stream.on('acknowledge', acknowledge)
     stream.on('error', cleanup)
     stream.on('close', cleanup)
     socket.on('close', cleanup)
+
+    // handle the deferred thunk
+    stream.on('finish', finish)
+    stream.on('error', finish)
+    stream.on('close', finish)
+    socket.on('close', finish)
+
+    return function (fn) {
+      done = fn
+    }
 
     function acknowledge() {
       cleanup()
@@ -105,6 +118,15 @@ module.exports = function (compressOptions) {
       stream.removeListener('close', cleanup)
       socket.removeListener('close', cleanup)
     }
+
+    function finish(err) {
+      done(filterError(err), stream)
+
+      stream.removeListener('finish', finish)
+      stream.removeListener('error', finish)
+      stream.removeListener('close', finish)
+      socket.removeListener('close', finish)
+    }
   }
 }
 
@@ -115,3 +137,5 @@ function filterError(err) {
   if (err.message === 'Write after end!') return
   return err
 }
+
+function noop() {}
