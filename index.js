@@ -67,7 +67,12 @@ module.exports = function (compressOptions) {
       if (typeof body === 'string' || Buffer.isBuffer(body)) {
         if (!compress) return stream.end(body)
         zlib.gzip(body, function (err, body) {
-          if (err) return onerror(err)
+          if (err) {
+            onerror(err)
+            stream.destroy()
+            return
+          }
+
           stream.end(body)
         })
         return
