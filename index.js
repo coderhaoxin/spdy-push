@@ -1,5 +1,7 @@
 
+var debug = require('debug')('koa-spdy-push')
 var compressible = require('compressible')
+var inspect = require('util').inspect
 var dethroy = require('dethroy')
 var bytes = require('bytes')
 var zlib = require('zlib')
@@ -43,6 +45,8 @@ module.exports = function (compressOptions) {
     } else if (typeof length === 'number') {
       headers['content-length'] = String(length)
     }
+
+    debug('pushing %s w/ \n%s', path, inspect(headers))
 
     // regular push stream handling
     var stream = res.push(path, headers, priority)
@@ -144,7 +148,10 @@ module.exports = function (compressOptions) {
 function filterError(err) {
   if (err == null) return
   if (!(err instanceof Error)) return
-  if (err.code === 'RST_STREAM') return
+  if (err.code === 'RST_STREAM') {
+    debug('got RST_STREAM %s', err.status)
+    return
+  }
   if (err.message === 'Write after end!') return
   return err
 }
