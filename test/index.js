@@ -28,6 +28,7 @@ describe('Streams', function () {
       yield listen(koa().use(function* () {
         this.status = 204
         var stream = new Readable
+        stream.push('klajsdlkfjalksdjflaksjdflaksjdfkjasldkfjaklsjdf')
         stream.push(null)
 
         push()(this, {
@@ -43,6 +44,11 @@ describe('Streams', function () {
       res.resume()
       res.should.have.header('Content-Encoding', 'gzip')
       res.should.have.header('Content-Type', 'text/plain')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
     }))
   })
 
@@ -66,8 +72,41 @@ describe('Streams', function () {
       res.resume()
       res.should.not.have.header('Content-Encoding')
       res.should.have.header('Content-Type', 'image/png')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
     }))
   })
+
+  /*
+  describe('.svg', function () {
+    it('should push', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
+
+        push()(this, {
+          path: '/fontawesome-webfont.svg',
+          headers: {
+            'content-type': 'image/svg+xml',
+          },
+          filename: join(__dirname, 'fontawesome-webfont.svg')
+        })
+      }))
+
+      var res = yield pull
+      res.resume()
+      res.should.have.header('Content-Encoding', 'gzip')
+      res.should.have.header('Content-Type', 'image/svg+xml')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
+    }))
+  })
+  */
 })
 
 describe('Files with Content-Length', function () {
@@ -92,6 +131,11 @@ describe('Files with Content-Length', function () {
       res.resume()
       res.should.not.have.header('Content-Encoding')
       res.should.have.header('Content-Type', 'text/plain')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
     }))
   })
 
@@ -116,6 +160,11 @@ describe('Files with Content-Length', function () {
       res.resume()
       res.should.have.header('Content-Encoding', 'gzip')
       res.should.have.header('Content-Type', 'text/plain')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
     }))
   })
 })

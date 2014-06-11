@@ -84,11 +84,15 @@ module.exports = function (compressOptions) {
       if (filename) body = fs.createReadStream(filename)
 
       // handle the stream
-      body
-      .on('error', destroy)
-      .pipe(zlib.Gzip(compressOptions))
-      .on('error', destroy)
-      .pipe(stream)
+      body.on('error', destroy)
+      if (compress) {
+        body
+        .pipe(zlib.Gzip(compressOptions))
+        .on('error', destroy)
+        .pipe(stream)
+      } else {
+        body.pipe(stream)
+      }
 
       // make sure we don't leak file descriptors when the client cancels these streams
       stream.on('error', destroy)
