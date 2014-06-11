@@ -37,10 +37,12 @@ module.exports = function (compressOptions) {
       && (typeof length !== 'number' || length > threshold)
       && !headers['content-encoding']
       && filter(headers['content-type'])
-    if (compress)
+    if (compress) {
       headers['content-encoding'] = 'gzip'
-    else if (typeof length === 'number')
+      delete headers['content-length']
+    } else if (typeof length === 'number') {
       headers['content-length'] = String(length)
+    }
 
     // regular push stream handling
     var stream = res.push(path, headers, priority)
