@@ -1,7 +1,7 @@
 {
   "name": "koa-spdy-push",
   "description": "SPDY Push helper for Koa",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "author": {
     "name": "Jonathan Ong",
     "email": "me@jongleberry.com",
