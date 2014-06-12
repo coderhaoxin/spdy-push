@@ -1,7 +1,9 @@
 
 var debug = require('debug')('koa-spdy-push')
 var compressible = require('compressible')
+var basename = require('path').basename
 var inspect = require('util').inspect
+var mime = require('mime-types')
 var dethroy = require('dethroy')
 var bytes = require('bytes')
 var zlib = require('zlib')
@@ -24,7 +26,7 @@ module.exports = function (compressOptions) {
 
     // push options
     var path = options.path
-    var headers = options.headers
+    var headers = options.headers || {}
     // 7 is lowest priority, 0 is highest.
     // http://www.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3#TOC-2.3.3-Stream-priority
     var priority = options.priority
@@ -44,6 +46,11 @@ module.exports = function (compressOptions) {
       delete headers['content-length']
     } else if (typeof length === 'number') {
       headers['content-length'] = String(length)
+    }
+
+    if (!headers['content-type']) {
+      var type = mime.contentType(basename(path))
+      if (type) headers['content-type'] = type
     }
 
     debug('pushing %s w/ \n%s', path, inspect(headers))

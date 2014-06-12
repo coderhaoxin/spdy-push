@@ -201,7 +201,24 @@ describe('RST_STREAM', function () {
 })
 
 describe('Strings', function () {
+  describe('when no content-type is set', function () {
+    it('should set the content-type if possible', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
 
+        push()(this, {
+          path: '/some.txt',
+          body: 'lol'
+        })
+      }))
+
+      var res = yield pull
+      res.should.have.header('Content-Type', 'text/plain; charset=utf-8')
+
+      var buffer = yield get(res, true)
+      buffer.should.equal('lol')
+    }))
+  })
 })
 
 describe('Buffers', function () {
@@ -261,7 +278,9 @@ describe('yield push', function () {
 })
 
 function listen(app) {
-  // app.outputErrors = true
+  // app.on('error', function (err) {
+  //   console.error(err.stack)
+  // })
   server = spdy.createServer(keys, app.callback())
 
   return function (done) {

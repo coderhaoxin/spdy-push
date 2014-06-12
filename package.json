@@ -12,6 +12,7 @@
   "repository": "koajs/spdy-push",
   "dependencies": {
     "compressible": "1",
+    "mime-types": "1",
     "dethroy": "1",
     "debug": "*",
     "bytes": "1"
