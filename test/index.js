@@ -23,6 +23,29 @@ afterEach(function (done) {
 })
 
 describe('Streams', function () {
+  describe('when empty', function () {
+    it('should still send', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
+        var stream = new Readable
+        stream.push(null)
+
+        push()(this, {
+          path: '/',
+          body: stream,
+        })
+      }))
+
+      var res = yield pull
+      res.resume()
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
+    }))
+  })
+
   describe('when text', function () {
     it('should gzip', co(function* () {
       yield listen(koa().use(function* () {
@@ -80,7 +103,6 @@ describe('Streams', function () {
     }))
   })
 
-  // /*
   describe('.svg', function () {
     it('should push', co(function* () {
       yield listen(koa().use(function* () {
@@ -103,7 +125,59 @@ describe('Streams', function () {
       }
     }))
   })
-  // */
+
+  describe('when content-encoding is already set', function () {
+    it('should not re-encode', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
+
+        push()(this, {
+          path: '/something.txt',
+          body: 'text',
+          headers: {
+            'content-encoding': 'identity'
+          }
+        })
+      }))
+
+      var res = yield pull
+      res.resume()
+      res.should.have.header('Content-Encoding', 'identity')
+      res.should.have.header('Content-Type', 'text/plain; charset=utf-8')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
+    }))
+  })
+
+  describe('when compressing', function () {
+    it('should remove the content-length', co(function* () {
+      yield listen(koa().use(function* () {
+        this.status = 204
+
+        push()(this, {
+          path: '/something.txt',
+          body: new Buffer(2048),
+          headers: {
+            'content-length': '2048'
+          }
+        })
+      }))
+
+      var res = yield pull
+      res.resume()
+      res.should.have.header('Content-Encoding', 'gzip')
+      res.should.have.header('Content-Type', 'text/plain; charset=utf-8')
+      res.should.not.have.header('Content-Length')
+
+      yield function (done) {
+        res.on('end', done)
+        res.on('error', done)
+      }
+    }))
+  })
 })
 
 describe('Files with Content-Length', function () {
