@@ -80,7 +80,7 @@ describe('Streams', function () {
     }))
   })
 
-  /*
+  // /*
   describe('.svg', function () {
     it('should push', co(function* () {
       yield listen(koa().use(function* () {
@@ -88,9 +88,6 @@ describe('Streams', function () {
 
         push()(this, {
           path: '/fontawesome-webfont.svg',
-          headers: {
-            'content-type': 'image/svg+xml',
-          },
           filename: join(__dirname, 'fontawesome-webfont.svg')
         })
       }))
@@ -106,7 +103,7 @@ describe('Streams', function () {
       }
     }))
   })
-  */
+  // */
 })
 
 describe('Files with Content-Length', function () {
@@ -311,6 +308,7 @@ function pull(done) {
   .once('error', done)
   .once('response', function (res) {
     if (res.statusCode !== 204) done(new Error('got status code: ' + res.statusCode))
+    res.resume()
   })
   .end()
 }

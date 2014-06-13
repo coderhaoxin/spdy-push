@@ -21,7 +21,6 @@ module.exports = function (compressOptions) {
 
     // koa properties
     var res = context.res
-    var socket = context.socket
     var onerror = context.onerror
 
     // push options
@@ -35,22 +34,33 @@ module.exports = function (compressOptions) {
     // types of bodies
     var body = options.body
     var filename = options.filename
-    // check whether to compress the stream
     var length = contentLength()
-    var compress = (body || filename)
-      && (typeof length !== 'number' || length > threshold)
-      && !headers['content-encoding']
-      && filter(headers['content-type'])
-    if (compress) {
-      headers['content-encoding'] = 'gzip'
-      delete headers['content-length']
-    } else if (typeof length === 'number') {
-      headers['content-length'] = String(length)
+    var type = headers['content-type']
+    if (!type) {
+      type = mime.contentType(basename(path))
+      if (type) headers['content-type'] = type
     }
 
-    if (!headers['content-type']) {
-      var type = mime.contentType(basename(path))
-      if (type) headers['content-type'] = type
+    // check whether to compress the stream
+    var compress = (body || filename) // need some sort of body
+      // must be above the threshold, but if we don't know the length,
+      // i.e. a stream, just compress it
+      && (typeof length !== 'number' || length > threshold)
+      // can't already set a content-encoding,
+      // even if it's `identity`
+      && !headers['content-encoding']
+      // must be a compressible content type
+      && filter(type)
+
+    if (compress) {
+      headers['content-encoding'] = 'gzip'
+      // delete the content length as it's going to change with
+      // compression. ideally we'll update with the compressed
+      // content-length but whatever
+      delete headers['content-length']
+    } else if (typeof length === 'number') {
+      // set the content-length if we have it
+      headers['content-length'] = String(length)
     }
 
     debug('pushing %s w/ \n%s', path, inspect(headers))
@@ -60,13 +70,12 @@ module.exports = function (compressOptions) {
     stream.on('acknowledge', acknowledge)
     stream.on('error', cleanup)
     stream.on('close', cleanup)
-    socket.on('close', cleanup)
 
-    // handle the deferred thunk
+    // handle the deferred thunk,
+    // yielding until the response is finished
     stream.on('finish', finish)
     stream.on('error', finish)
     stream.on('close', finish)
-    socket.on('close', finish)
 
     return function (fn) {
       done = fn
@@ -75,11 +84,15 @@ module.exports = function (compressOptions) {
     function acknowledge() {
       cleanup()
 
+      // empty stream
       if (!body && !filename) return stream.end()
 
+      // we can just use the utility method
       if (typeof body === 'string' || Buffer.isBuffer(body)) {
         if (!compress) return stream.end(body)
         zlib.gzip(body, function (err, body) {
+          // doubt this would ever happen,
+          // but be sure to destroy the stream in case of errors
           if (err) {
             onerror(err)
             stream.destroy()
@@ -109,7 +122,6 @@ module.exports = function (compressOptions) {
       stream.on('error', destroy)
       stream.on('close', destroy)
       stream.on('finish', destroy)
-      socket.on('close', destroy)
 
       function destroy(err) {
         if (err) onerror(filterError(err))
@@ -117,17 +129,14 @@ module.exports = function (compressOptions) {
 
         stream.removeListener('close', destroy)
         stream.removeListener('finish', destroy)
-        socket.removeListener('close', destroy)
       }
     }
 
+    // try to get the content-length of the request
     function contentLength() {
-      if (filename) {
-        // already set
-        if (!headers['content-length']) return false
-        return parseInt(headers['content-length'], 10)
-      }
-
+      if (headers['content-length']) return parseInt(headers['content-length'], 10)
+      // not worth `fs.stat()`ing for this
+      if (filename) return false
       if (!body) return 0
       if (typeof body === 'string') return Buffer.byteLength(body)
       if (Buffer.isBuffer(body)) return body.length
@@ -138,7 +147,6 @@ module.exports = function (compressOptions) {
 
       stream.removeListener('acknowledge', acknowledge)
       stream.removeListener('close', cleanup)
-      socket.removeListener('close', cleanup)
     }
 
     function finish(err) {
@@ -147,11 +155,12 @@ module.exports = function (compressOptions) {
       stream.removeListener('finish', finish)
       stream.removeListener('error', finish)
       stream.removeListener('close', finish)
-      socket.removeListener('close', finish)
     }
   }
 }
 
+// we don't care about these errors
+// and we don't want to clog up `this.onerror`
 function filterError(err) {
   if (err == null) return
   if (!(err instanceof Error)) return
@@ -159,6 +168,7 @@ function filterError(err) {
     debug('got RST_STREAM %s', err.status)
     return
   }
+  // WHY AM I GETTING THESE ERRORS?
   if (err.message === 'Write after end!') return
   return err
 }
