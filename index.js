@@ -3,6 +3,7 @@ var debug = require('debug')('koa-spdy-push')
 var compressible = require('compressible')
 var basename = require('path').basename
 var inspect = require('util').inspect
+var Promise = require('bluebird')
 var mime = require('mime-types')
 var dethroy = require('dethroy')
 var bytes = require('bytes')
@@ -16,9 +17,7 @@ module.exports = function (compressOptions) {
   var threshold = compressOptions.threshold || 1024
   if (typeof threshold === 'string') threshold = bytes(threshold)
 
-  return function push(context, options, done) {
-    done = done || noop
-
+  return function push(context, options) {
     // koa properties
     var res = context.res
     var onerror = context.onerror
@@ -71,15 +70,20 @@ module.exports = function (compressOptions) {
     stream.on('error', cleanup)
     stream.on('close', cleanup)
 
-    // handle the deferred thunk,
-    // yielding until the response is finished
-    stream.on('finish', finish)
-    stream.on('error', finish)
-    stream.on('close', finish)
+    return new Promise(function (resolve, reject) {
+      stream.on('finish', finish)
+      stream.on('error', finish)
+      stream.on('close', finish)
 
-    return function (fn) {
-      done = fn
-    }
+      function finish(err) {
+        if (err = filterError(err)) reject(err)
+        else resolve(stream)
+
+        stream.removeListener('finish', finish)
+        stream.removeListener('error', finish)
+        stream.removeListener('close', finish)
+      }
+    })
 
     function acknowledge() {
       cleanup()
@@ -148,14 +152,6 @@ module.exports = function (compressOptions) {
       stream.removeListener('acknowledge', acknowledge)
       stream.removeListener('close', cleanup)
     }
-
-    function finish(err) {
-      done(filterError(err), stream)
-
-      stream.removeListener('finish', finish)
-      stream.removeListener('error', finish)
-      stream.removeListener('close', finish)
-    }
   }
 }
 
@@ -172,5 +168,3 @@ function filterError(err) {
   if (err.message === 'Write after end!') return
   return err
 }
-
-function noop() {}
