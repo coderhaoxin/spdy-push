@@ -13,7 +13,7 @@ var push = require('koa-spdy-push')({
 })
 
 app.use(function* () {
-  is (!this.res.isSpdy) return
+  if (!this.res.isSpdy) return
 
   push(this, {
     path: '/image.png',
