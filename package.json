@@ -31,5 +31,13 @@
   },
   "scripts": {
     "test": "NODE_ENV=test mocha --require should --harmony-generators --reporter spec --bail"
-  }
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "koa",
+    "spdy",
+    "push"
+  ]
 }
