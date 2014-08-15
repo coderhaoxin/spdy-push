@@ -14,7 +14,7 @@
     "compressible": "1",
     "mime-types": "1",
     "bluebird": "2",
-    "dethroy": "1",
+    "destroy": "1",
     "debug": "*",
     "bytes": "1"
   },
