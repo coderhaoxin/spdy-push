@@ -52,14 +52,14 @@ These headers will be automatically set:
 
 [npm-image]: https://img.shields.io/npm/v/koa-spdy-push.svg?style=flat-square
 [npm-url]: https://npmjs.org/package/koa-spdy-push
-[github-tag]: http://img.shields.io/github/tag/koa/spdy-push.svg?style=flat-square
-[github-url]: https://github.com/koa/spdy-push/tags
-[travis-image]: https://img.shields.io/travis/koa/spdy-push.svg?style=flat-square
-[travis-url]: https://travis-ci.org/koa/spdy-push
-[coveralls-image]: https://img.shields.io/coveralls/koa/spdy-push.svg?style=flat-square
-[coveralls-url]: https://coveralls.io/r/koa/spdy-push?branch=master
-[david-image]: http://img.shields.io/david/koa/spdy-push.svg?style=flat-square
-[david-url]: https://david-dm.org/koa/spdy-push
+[github-tag]: http://img.shields.io/github/tag/koajs/spdy-push.svg?style=flat-square
+[github-url]: https://github.com/koajs/spdy-push/tags
+[travis-image]: https://img.shields.io/travis/koajs/spdy-push.svg?style=flat-square
+[travis-url]: https://travis-ci.org/koajs/spdy-push
+[coveralls-image]: https://img.shields.io/coveralls/koajs/spdy-push.svg?style=flat-square
+[coveralls-url]: https://coveralls.io/r/koajs/spdy-push?branch=master
+[david-image]: http://img.shields.io/david/koajs/spdy-push.svg?style=flat-square
+[david-url]: https://david-dm.org/koajs/spdy-push
 [license-image]: http://img.shields.io/npm/l/koa-spdy-push.svg?style=flat-square
 [license-url]: LICENSE.md
 [downloads-image]: http://img.shields.io/npm/dm/koa-spdy-push.svg?style=flat-square
